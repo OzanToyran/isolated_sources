@@ -1,0 +1,3 @@
+-integrate Chandra query
+-output will look like: [JNAME] [RAJD] [DECJD] [XMM-Newton observation] [XMM-iauname] [XMM-obsid] [Chandra observation] [Chandra-Name] [Chandra-obsid]
+-integrate eROSITA catalogue

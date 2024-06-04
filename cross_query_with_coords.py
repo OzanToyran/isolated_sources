@@ -1,12 +1,23 @@
+#********************************************************************************************************************************************************************
+#PURPOSE: This code takes the coordinates (RAJD,DECJD) of a list of sources and performs cone search of X-ray observations in the XMM-Newton and Chandra Archives.
+#
+#Created by: Ozan Toyran , 28.05.2024
+#
+#
+#OUTPUT: A logfile named "outlog.csv" that contains JNAME, RA, DEC, XMM-Newton Archive info (if exists), Chandra Archive info (if exists)
+#
+#
+#Log: 
+#
+#********************************************************************************************************************************************************************
+
 import pandas as pd
 import pyvo as vo
-
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.table import QTable
-from astropy.time import Time
 from astropy.utils.data import download_file
 
 from astroquery.esasky import ESASky
