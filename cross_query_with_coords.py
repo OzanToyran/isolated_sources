@@ -32,14 +32,18 @@ table = pd.read_csv('rpps.csv')
 print(table)
 
 outlog = {
-            'Name': [] ,
-            'Ra'  : [] ,
-            'Dec' : [] ,
-            'xray_xmm': [] ,
-            'xray_xmm_info' : []
+            'NAME': [] ,                # Jname obtained from ATNF Pulsar Catalogue
+            'RAJD'  : [] ,              # RAJD obtained from ATNF Pulsar Catalogue
+            'DECJD' : [] ,              # DECJD obtained from ATNF Pulsar Catalogue
+            'XMM-OBS': [] ,             # [Boolean] Returns True if there exists an XMM-Newton Observation
+            'XMM-IAUNAME' : [],         # Contains IAUNAME of the X-ray source for XMM-Newton sources 
+            'XMM-OBSID' : [],           # Contains the given Observation ID for the XMM-Newton sources
+            'CHANDRA-OBS' : [],         # [Boolean] Returns True if there exists a Chandra Observation
+            'CHANDRA-NAME' : [],        # Contains the Chandra Name of the source
+            'CHANDRA-OBSID' : []        # Contains the given Observation ID for the Chandra sources
 }
 
-
+#loop through each source, get their Rajd and decjd
 
 for i in table.index:
     print(i,table.iloc[i,0])
@@ -54,24 +58,23 @@ for i in table.index:
 
     result = ESASky.query_region_catalogs(position=list_coords, radius=13 * u.arcmin, catalogs=['XMM-EPIC-STACK', 'XMM-EPIC'])
 
-    for table2 in result:
-        colnames = table2.colnames
+    # Record Name and coordinates of the source
 
-    
-
+    outlog['NAME'].append(table.iloc[i,0])
+    outlog['RAJD'].append(rajd)
+    outlog['DECJD'].append(decjd)
 
     if result == []:
-        outlog['Name'].append(table.iloc[i,0])
-        outlog['Ra'].append(rajd)
-        outlog['Dec'].append(decjd)
-        outlog['xray_xmm'].append('no')
-    else:
-        outlog['Name'].append(table.iloc[i,0])
-        outlog['Ra'].append(rajd)
-        outlog['Dec'].append(decjd)        
-        outlog['xray_xmm'].append('yes')
-        outlog['xray_xmm_info'].append(colnames)
 
+        outlog['XMM-OBS'].append(False)
+        outlog['XMM-IAUNAME'].append('')
+        outlog['XMM-OBSID'].append('')
+
+    else:
+
+        outlog['XMM-OBS'].append(True)
+        outlog['XMM-IAUNAME'].append(result['XMM-EPIC']['iauname'])
+        outlog['XMM-OBSID'].append()
 
 #    for table_name in result.keys():
 #        table = result[table_name]
