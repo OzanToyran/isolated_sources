@@ -31,21 +31,31 @@ from psrqpy import QueryATNF
 table = pd.read_csv('rpps.csv')
 print(table)
 
-outlog = {
-            'NAME': [] ,                # Jname obtained from ATNF Pulsar Catalogue
-            'RAJD'  : [] ,              # RAJD obtained from ATNF Pulsar Catalogue
-            'DECJD' : [] ,              # DECJD obtained from ATNF Pulsar Catalogue
-            'XMM-OBS': [] ,             # [Boolean] Returns True if there exists an XMM-Newton Observation
-            'XMM-IAUNAME' : [],         # Contains IAUNAME of the X-ray source for XMM-Newton sources 
-            'XMM-OBSID' : [],           # Contains the given Observation ID for the XMM-Newton sources
-            'CHANDRA-OBS' : [],         # [Boolean] Returns True if there exists a Chandra Observation
-            'CHANDRA-NAME' : [],        # Contains the Chandra Name of the source
-            'CHANDRA-OBSID' : []        # Contains the given Observation ID for the Chandra sources
-}
 
 #loop through each source, get their Rajd and decjd
 
+outlog = {
+    'NAME': [] ,                # Jname obtained from ATNF Pulsar Catalogue
+    'RAJD'  : [] ,              # RAJD obtained from ATNF Pulsar Catalogue
+    'DECJD' : [] ,              # DECJD obtained from ATNF Pulsar Catalogue
+    'XMM-OBS': [] ,             # [Boolean] Returns True if there exists an XMM-Newton Observation
+    'XMM-OBSID' : [],           # Contains the given Observation ID for the XMM-Newton sources
+    'NX_OBS' : [],              # Number of individual XMM Observation IDs for the source 
+    'CHANDRA-OBS' : [],         # [Boolean] Returns True if there exists a Chandra Observation
+    'CHANDRA-OBSID' : [],        # Contains the given Observation ID for the Chandra sources
+    'NC_OBS' : []              # Number of individual Chandra Observation IDs for the source 
+}
+
+outlog= pd.DataFrame(outlog)
+
 for i in table.index:
+
+
+    if i == 100:
+        outlog.to_csv('outlog.txt', index=False) 
+        
+
+
     print(i,table.iloc[i,0])
 
     rajd=table.iloc[i,2]   #RAJD
@@ -60,25 +70,85 @@ for i in table.index:
 
     # Record Name and coordinates of the source
 
-    outlog['NAME'].append(table.iloc[i,0])
-    outlog['RAJD'].append(rajd)
-    outlog['DECJD'].append(decjd)
+#    outlog['NAME'].append(table.iloc[i,0])
+#    outlog['RAJD'].append(rajd)
+#    outlog['DECJD'].append(decjd)
+        
+    new_row = {
+        'NAME': table.iloc[i,0] ,                # Jname obtained from ATNF Pulsar Catalogue
+        'RAJD'  : rajd ,              # RAJD obtained from ATNF Pulsar Catalogue
+        'DECJD' : decjd                # DECJD obtained from ATNF Pulsar Catalogue
+    }
 
+
+    # If a XMM-Newton observation entry found in the catalogue
     if result == []:
 
-        outlog['XMM-OBS'].append(False)
-        outlog['XMM-IAUNAME'].append('')
-        outlog['XMM-OBSID'].append('')
+        new_row['XMM-OBS'] = [0]
+        new_row['XMM-OBSID'] = [None]
+        new_row['NX_OBS'] = [0]
 
     else:
 
-        outlog['XMM-OBS'].append(True)
-        outlog['XMM-IAUNAME'].append(result['XMM-EPIC']['iauname'])
-        outlog['XMM-OBSID'].append()
+        the_table = result['XMM-EPIC']
+        obsids = the_table['observation_id']  
+        #Above arrays are likely to contain duplicate entries, so we only take the unique entries
 
-#    for table_name in result.keys():
-#        table = result[table_name]
+        list= {
+            'observation_id': obsids[:]
+        }
+        list = pd.DataFrame(list)
+        df_obsids=list['observation_id'].unique()
+        nx_obs=len(df_obsids)
+        print(df_obsids)
 
-    #print(table.columns)
-#    print(table['observation_id','n_detections'])
-outlog.to_csv('outlog.csv', index=False) 
+        #if there are more than one observation take the first one
+        df_obsids=df_obsids[0]
+        
+        new_row['XMM-OBS']= [1]              # [Boolean] Returns True if there exists an XMM-Newton Observation
+        new_row['XMM-OBSID']= [df_obsids]           # Contains the given Observation ID for the XMM-Newton sources
+        new_row['NX_OBS'] = [nx_obs]
+        
+
+
+#--------------------CHANDRA SEARCH-----------------------
+
+    result2 = ESASky.query_region_catalogs(position=list_coords, radius=10 * u.arcmin, catalogs=['Chandra-SC2'])
+
+    # If a Chandra observation entry found in the catalogue
+    if result2 == []:
+
+        new_row['CHANDRA-OBS'] = [0]
+        new_row['CHANDRA-OBSID'] = [None]
+        new_row['NC_OBS'] = [0]
+
+
+    else:
+
+        the_table2 = result2['CHANDRA-SC2']
+        names = the_table2['name']  
+        #Above arrays are likely to contain duplicate entries, so we only take the unique entries
+
+        list2= {
+            'names': names[:]
+        }
+        list2 = pd.DataFrame(list2)
+        df_names=list2['names'].unique()
+        nc_obs=len(df_names)
+        print(df_names)
+
+        #if there are more than one observation take the first one
+        df_names=df_names[0]
+        
+        new_row['CHANDRA-OBS']= [1]              # [Boolean] Returns True if there exists an XMM-Newton Observation
+        new_row['CHANDRA-OBSID']= [df_names]           # Contains the given Observation ID for the XMM-Newton sources
+        new_row['NC_OBS'] = [nc_obs]
+
+
+#--------------------Record the query results-------------
+    print(new_row)
+    new_row= pd.DataFrame(new_row)
+
+    outlog = pd.concat([outlog,new_row],ignore_index=True)
+
+outlog.to_csv('outlog.txt', index=False) 
