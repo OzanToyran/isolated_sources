@@ -48,11 +48,8 @@ outlog = {
 
 outlog= pd.DataFrame(outlog)
 
+
 for i in table.index:
-
-
-    if i == 100:
-        outlog.to_csv('outlog.txt', index=False) 
         
 
 
@@ -151,4 +148,4 @@ for i in table.index:
 
     outlog = pd.concat([outlog,new_row],ignore_index=True)
 
-outlog.to_csv('outlog.txt', index=False) 
+outlog.to_csv('outlog2.txt', index=False) 
